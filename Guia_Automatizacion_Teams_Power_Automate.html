@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Guía Power Automate + Teams + Excel</title>
+<style>
+:root{
+  --bg:#f6f8fb; --surface:#ffffff; --surface-2:#f1f5fb; --text:#1f2328; --muted:#5f6b7a;
+  --blue:#2563eb; --blue-2:#5b8def; --purple:#7c3aed; --teal:#0f766e; --green:#15803d;
+  --amber:#b45309; --red:#b91c1c; --border:#dbe3ee; --shadow:0 10px 30px rgba(31,35,40,.08);
+  --radius:18px; --sidebar:300px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; font-family:Segoe UI, Inter, Arial, sans-serif; color:var(--text);
+  background:linear-gradient(180deg,#eef4ff 0,#f7f9fc 280px,#f6f8fb 100%);
+}
+a{color:inherit;text-decoration:none}
+button{font:inherit}
+.progress-top{position:fixed;top:0;left:0;height:4px;background:linear-gradient(90deg,var(--purple),var(--blue));width:0;z-index:100}
+.hero{
+  padding:74px 34px 34px; background:
+  radial-gradient(circle at 20% 10%, rgba(124,58,237,.17), transparent 30%),
+  radial-gradient(circle at 85% 15%, rgba(37,99,235,.18), transparent 28%),
+  linear-gradient(135deg,#0f172a,#172554 56%,#312e81);
+  color:white;
+}
+.hero-inner{max-width:1280px;margin:auto}
+.eyebrow{display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(255,255,255,.08);font-size:13px}
+.hero h1{font-size:clamp(36px,6vw,72px);line-height:1.02;max-width:980px;margin:18px 0}
+.hero p{max-width:900px;color:#dbeafe;font-size:18px;line-height:1.65}
+.hero-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}
+.badge{font-size:12px;font-weight:700;padding:7px 10px;border-radius:999px;background:#eef2ff;color:#312e81;border:1px solid #d9ddff}
+.badge.excel{background:#ecfdf5;color:#166534;border-color:#bbf7d0}
+.badge.teams{background:#eef2ff;color:#4338ca;border-color:#c7d2fe}
+.badge.od{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
+.badge.o365{background:#fff7ed;color:#c2410c;border-color:#fed7aa}
+.badge.pa{background:#f5f3ff;color:#6d28d9;border-color:#ddd6fe}
+
+.shell{max-width:1420px;margin:0 auto;display:grid;grid-template-columns:var(--sidebar) minmax(0,1fr);gap:26px;padding:30px}
+.sidebar{
+  position:sticky;top:18px;align-self:start;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);
+  border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow);padding:18px;max-height:calc(100vh - 36px);overflow:auto
+}
+.sidebar h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:6px 8px 12px}
+.nav a{display:block;padding:10px 12px;border-radius:10px;color:#445;line-height:1.25;font-size:14px}
+.nav a:hover,.nav a.active{background:#eef4ff;color:#1d4ed8}
+.main{min-width:0}
+.section{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:28px;margin-bottom:22px;scroll-margin-top:18px
+}
+.section h2{font-size:28px;margin:0 0 10px}
+.section h3{font-size:20px;margin:26px 0 10px}
+.section p,.section li{line-height:1.68;color:#374151}
+.lead{font-size:18px;color:#475569!important}
+.step-head{display:flex;gap:14px;align-items:flex-start;margin-bottom:18px}
+.step-num{flex:0 0 46px;height:46px;border-radius:14px;display:grid;place-items:center;color:white;font-weight:800;background:linear-gradient(135deg,var(--purple),var(--blue))}
+.kicker{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0}
+.card{border:1px solid var(--border);border-radius:16px;padding:18px;background:linear-gradient(180deg,#fff,#fbfdff)}
+.card strong{display:block;margin-bottom:6px}
+.callout{border-radius:16px;padding:18px 20px;margin:18px 0;border-left:5px solid}
+.callout.warning{background:#fff7ed;border-color:#f59e0b}
+.callout.success{background:#ecfdf5;border-color:#22c55e}
+.callout.info{background:#eff6ff;border-color:#3b82f6}
+.callout.danger{background:#fef2f2;border-color:#ef4444}
+.codebox{position:relative;background:#0f172a;color:#e2e8f0;border-radius:14px;padding:18px 54px 18px 18px;margin:14px 0;overflow:auto}
+.copy-btn{position:absolute;right:10px;top:10px;border:0;border-radius:9px;padding:7px 10px;background:#1e293b;color:white;cursor:pointer}
+.copy-btn.copied{background:#166534}
+.flow{display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px 0}
+.flow-node{width:min(560px,100%);border:1px solid var(--border);border-radius:16px;background:white;padding:16px 18px;box-shadow:0 7px 18px rgba(31,35,40,.05)}
+.flow-node .label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.flow-arrow{font-size:28px;color:#7c3aed}
+.flow-loop{border:2px dashed #c4b5fd;padding:16px;border-radius:20px;width:min(650px,100%);background:#faf7ff}
+.flow-loop-title{font-weight:800;color:#6d28d9;margin-bottom:12px;text-align:center}
+table{width:100%;border-collapse:collapse;margin:14px 0}
+th,td{padding:12px 14px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+th{background:#f8fafc;color:#334155;font-size:13px}
+details{border:1px solid var(--border);border-radius:14px;padding:12px 14px;background:#fff;margin:10px 0}
+summary{cursor:pointer;font-weight:700}
+.checklist-wrap{border:1px solid var(--border);border-radius:16px;padding:18px;background:#fbfdff}
+.check-progress{height:12px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin:10px 0 18px}
+.check-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--purple),var(--blue));transition:.3s}
+.check-item{display:flex;gap:10px;align-items:flex-start;padding:8px 0}
+.check-item input{width:18px;height:18px;margin-top:3px}
+.express{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;counter-reset:item}
+.express div{padding:13px 14px;border:1px solid var(--border);border-radius:12px;background:#f8fbff}
+.mini-label{font-size:12px;font-weight:800;color:#6d28d9;text-transform:uppercase}
+.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.footer{color:#64748b;text-align:center;padding:8px 0 30px;font-size:13px}
+@media (max-width:1000px){
+  .shell{grid-template-columns:1fr;padding:18px}
+  .sidebar{position:relative;top:auto;max-height:none}
+  .card-grid{grid-template-columns:1fr}
+}
+@media (max-width:680px){
+  .hero{padding:56px 18px 26px}.section{padding:20px}.two-col,.express{grid-template-columns:1fr}
+  .section h2{font-size:24px}.hero p{font-size:16px}
+}
+</style>
+</head>
+<body>
+<div class="progress-top" id="topProgress"></div>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">⚡ Guía interna · Power Automate + Teams</div>
+    <h1>Automatiza mensajes individuales de Teams desde una base en Excel</h1>
+    <p>Manual paso a paso para construir un flujo que lea correos desde Excel, identifique a cada colaborador en Microsoft 365, cree o encuentre su chat, genere una mención personalizada y envíe el mensaje desde tu propio usuario de Teams.</p>
+    <div class="hero-badges">
+      <span class="badge excel">Excel</span><span class="badge od">OneDrive</span><span class="badge pa">Power Automate</span><span class="badge o365">Office 365</span><span class="badge teams">Teams</span>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="sidebar">
+    <h3>Contenido</h3>
+    <nav class="nav" id="nav">
+      <a href="#resumen">Resumen express</a>
+      <a href="#arquitectura">Arquitectura final</a>
+      <a href="#onedrive">Excel en OneDrive</a>
+      <a href="#excel">Preparación del Excel</a>
+      <a href="#flujo">Crear el flujo</a>
+      <a href="#listrows">List rows</a>
+      <a href="#apply">Apply to each</a>
+      <a href="#profile">Get user profile</a>
+      <a href="#chat">Create a chat</a>
+      <a href="#mention">@mention token</a>
+      <a href="#post">Post message</a>
+      <a href="#prueba">Pruebas</a>
+      <a href="#errores">Errores frecuentes</a>
+      <a href="#checklist">Checklist final</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+
+    <section id="resumen" class="section">
+      <div class="step-head"><div class="step-num">⚡</div><div><div class="kicker">Inicio rápido</div><h2>Resumen express</h2></div></div>
+      <div class="express">
+        <div>1. Subir Excel al OneDrive corporativo propio.</div><div>2. Convertir correos en Tabla.</div>
+        <div>3. List rows present in a table.</div><div>4. Apply to each → body/value.</div>
+        <div>5. Get user profile → Correo.</div><div>6. Create a chat → User ID.</div>
+        <div>7. Get @mention token → Correo.</div><div>8. Post message → User.</div>
+        <div>9. Chat → Conversation ID.</div><div>10. Probar con 1–2 personas.</div>
+        <div>11. Ejecutar base completa.</div>
+      </div>
+      <div class="callout success"><strong>Objetivo final:</strong> que el mensaje se vea como enviado normalmente desde tu propio usuario de Teams, no desde <code>Flow Bot</code>.</div>
+    </section>
+
+    <section id="arquitectura" class="section">
+      <div class="step-head"><div class="step-num">1</div><div><div class="kicker">Visión general</div><h2>Arquitectura final del flujo</h2></div></div>
+      <div class="flow">
+        <div class="flow-node"><div class="label">Trigger</div><strong>Manually trigger a flow</strong></div><div class="flow-arrow">↓</div>
+        <div class="flow-node"><div class="label">Excel Online (Business)</div><strong>List rows present in a table</strong></div><div class="flow-arrow">↓</div>
+        <div class="flow-loop">
+          <div class="flow-loop-title">APPLY TO EACH · body/value</div>
+          <div class="flow">
+            <div class="flow-node"><div class="label">Office 365 Users</div><strong>Get user profile (V2)</strong><br>Correo → Perfil → User ID</div><div class="flow-arrow">↓</div>
+            <div class="flow-node"><div class="label">Microsoft Teams</div><strong>Create a chat</strong><br>User ID → Conversation ID</div><div class="flow-arrow">↓</div>
+            <div class="flow-node"><div class="label">Microsoft Teams</div><strong>Get an @mention token for a user</strong><br>Correo → @Usuario</div><div class="flow-arrow">↓</div>
+            <div class="flow-node"><div class="label">Microsoft Teams</div><strong>Post message in a chat or channel</strong><br>Post as: User · Chat: Conversation ID</div>
+          </div>
+        </div>
+      </div>
+      <div class="callout info"><strong>Clave:</strong> las cuatro acciones posteriores a <em>Apply to each</em> deben quedar dentro de ese bloque, porque se repetirán una vez por cada fila del Excel.</div>
+    </section>
+
+    <section id="onedrive" class="section">
+      <div class="step-head"><div class="step-num">2</div><div><div class="kicker">Requisito crítico</div><h2>¿El Excel tiene que estar compartido?</h2></div></div>
+      <p class="lead"><strong>No necesariamente.</strong> Puede ser privado. Lo importante es que esté alojado en tu <strong>OneDrive for Business corporativo</strong> y sea accesible para Power Automate.</p>
+      <div class="callout warning"><strong>IMPORTANTE:</strong> El archivo no tiene que estar compartido con otras personas, pero sí tiene que estar alojado en tu OneDrive corporativo. Power Automate no puede leer directamente un Excel que solo está guardado en tu PC.</div>
+      <div class="two-col">
+        <div class="card"><strong>❌ Incorrecto</strong><code>C:\Users\Usuario\Desktop\Recordatorio.xlsx</code></div>
+        <div class="card"><strong>✅ Correcto</strong><code>OneDrive corporativo → Mis archivos → Recordatorio.xlsx</code></div>
+      </div>
+      <h3>Configuración esperada en Power Automate</h3>
+      <table>
+        <tr><th>Campo</th><th>Valor</th></tr>
+        <tr><td>Location</td><td><code>OneDrive for Business</code></td></tr>
+        <tr><td>Document Library</td><td><code>Documentos</code></td></tr>
+        <tr><td>File</td><td><code>/Recordatorio.xlsx</code></td></tr>
+      </table>
+      <p>En algunas organizaciones el OneDrive personal se visualiza como <strong>Mis archivos</strong>, pero la biblioteca aparece en Power Automate como <strong>Documentos</strong>. Es normal.</p>
+    </section>
+
+    <section id="excel" class="section">
+      <div class="step-head"><div class="step-num">3</div><div><div class="kicker">Preparación de datos</div><h2>Preparar correctamente el Excel</h2></div></div>
+      <p>El archivo puede llamarse <code>Recordatorio.xlsx</code> y debe contener, como mínimo, una columna llamada exactamente <code>Correo</code>.</p>
+      <table><tr><th>Correo</th></tr><tr><td>usuario1@empresa.com</td></tr><tr><td>usuario2@empresa.com</td></tr><tr><td>usuario3@empresa.com</td></tr></table>
+      <h3>Convertir los datos en una Tabla real</h3>
+      <ol>
+        <li>Selecciona el rango completo incluyendo el encabezado <code>Correo</code>.</li>
+        <li>Presiona <strong>Ctrl + T</strong>.</li>
+        <li>Marca <strong>La tabla tiene encabezados</strong>.</li>
+        <li>Confirma y revisa en <strong>Diseño de tabla / Table Design</strong> el nombre asignado.</li>
+        <li>Puede llamarse <code>Tabla1</code> o <code>Table1</code>.</li>
+        <li>Guarda el archivo.</li>
+      </ol>
+      <div class="callout info"><strong>¿Cómo sé si realmente es una Tabla?</strong><br>Haz clic dentro de los datos. Si aparece la pestaña contextual <strong>Diseño de tabla / Table Design</strong>, sí es una tabla estructurada.</div>
+      <h3>Evitar filas vacías</h3>
+      <p>La tabla debe terminar exactamente en la última fila con información. Una tabla que incluye filas aparentemente vacías hará que Power Automate intente procesarlas.</p>
+      <div class="callout danger"><strong>Síntoma típico:</strong> <code>Apply to each</code> procesa más registros de los esperados y <code>Get user profile (V2)</code> falla con un error como <code>id may not be null or empty</code>.</div>
+      <p>Corrige el rango usando <strong>Diseño de tabla → Cambiar tamaño de tabla</strong> o elimina las filas vacías de la tabla.</p>
+    </section>
+
+    <section id="flujo" class="section">
+      <div class="step-head"><div class="step-num">4</div><div><div class="kicker">Construcción</div><h2>Crear el flujo</h2></div></div>
+      <ol>
+        <li>Entra a Microsoft Power Automate.</li>
+        <li>Crea un <strong>Instant cloud flow / Flujo de nube instantáneo</strong>.</li>
+        <li>Elige <strong>Manually trigger a flow</strong>.</li>
+      </ol>
+      <div class="card-grid">
+        <div class="card"><strong>Ventaja 1</strong>Revisas la base antes de enviar.</div>
+        <div class="card"><strong>Ventaja 2</strong>Controlas exactamente cuándo se ejecuta.</div>
+        <div class="card"><strong>Ventaja 3</strong>Facilita pruebas pequeñas antes de usar la base completa.</div>
+      </div>
+    </section>
+
+    <section id="listrows" class="section">
+      <div class="step-head"><div class="step-num">5</div><div><div class="kicker">Acción 1</div><h2>List rows present in a table</h2></div></div>
+      <p>Agrega <strong>Excel Online (Business) → List rows present in a table</strong>.</p>
+      <table>
+        <tr><th>Campo</th><th>Qué seleccionar</th></tr>
+        <tr><td>Location</td><td>OneDrive for Business</td></tr>
+        <tr><td>Document Library</td><td>Documentos</td></tr>
+        <tr><td>File</td><td>Recordatorio.xlsx</td></tr>
+        <tr><td>Table</td><td>Tabla1 / Table1</td></tr>
+      </table>
+      <details><summary>¿Table muestra “No items”?</summary><p>Normalmente significa que Power Automate encontró el archivo, pero no detectó una Tabla estructurada. Abre Excel, convierte el rango con <strong>Ctrl + T</strong>, guarda, cierra el archivo y vuelve a seleccionarlo en Power Automate.</p></details>
+    </section>
+
+    <section id="apply" class="section">
+      <div class="step-head"><div class="step-num">6</div><div><div class="kicker">Acción 2</div><h2>Apply to each</h2></div></div>
+      <p>Agrega <strong>Control → Apply to each</strong>. En <strong>Select an output from previous steps</strong> selecciona <code>body/value</code> o simplemente <code>value</code> de <strong>List rows present in a table</strong>.</p>
+      <div class="callout info"><strong>Qué significa:</strong> <code>value</code> es la colección completa de filas que devolvió Excel. El bucle tomará una fila a la vez.</div>
+    </section>
+
+    <section id="profile" class="section">
+      <div class="step-head"><div class="step-num">7</div><div><div class="kicker">Acción 3</div><h2>Get user profile (V2)</h2></div></div>
+      <p>Dentro de <strong>Apply to each</strong>, agrega <strong>Office 365 Users → Get user profile (V2)</strong>.</p>
+      <p>En <strong>User (UPN)</strong> debes pasar el correo de la fila actual.</p>
+      <div class="mini-label">Correo actual</div>
+      <div class="codebox"><button class="copy-btn" data-copy="items('Apply_to_each')?['Correo']">Copiar</button><code>items('Apply_to_each')?['Correo']</code></div>
+      <p><code>items('Apply_to_each')</code> obtiene la fila actual y <code>['Correo']</code> extrae el valor de la columna Correo.</p>
+    </section>
+
+    <section id="chat" class="section">
+      <div class="step-head"><div class="step-num">8</div><div><div class="kicker">Acción 4</div><h2>Create a chat</h2></div></div>
+      <p>Agrega <strong>Microsoft Teams → Create a chat</strong>, también dentro de <strong>Apply to each</strong>.</p>
+      <p>En <strong>Members to add</strong> utiliza el <strong>Id</strong> devuelto por <strong>Get user profile (V2)</strong>.</p>
+      <div class="mini-label">Si no aparece Id</div>
+      <div class="codebox"><button class="copy-btn" data-copy="outputs('Get_user_profile_(V2)')?['body/id']">Copiar</button><code>outputs('Get_user_profile_(V2)')?['body/id']</code></div>
+      <div class="callout info"><strong>Title:</strong> déjalo vacío. Para este flujo no necesitas un título de chat.</div>
+    </section>
+
+    <section id="mention" class="section">
+      <div class="step-head"><div class="step-num">9</div><div><div class="kicker">Acción 5</div><h2>Get an @mention token for a user</h2></div></div>
+      <p>Agrega <strong>Microsoft Teams → Get an @mention token for a user</strong>.</p>
+      <p>En el campo <strong>User</strong>, usa nuevamente el correo de la fila actual:</p>
+      <div class="codebox"><button class="copy-btn" data-copy="items('Apply_to_each')?['Correo']">Copiar</button><code>items('Apply_to_each')?['Correo']</code></div>
+      <div class="callout success"><strong>Por qué hacerlo así:</strong> escribir manualmente <code>@Nombre</code> puede quedar como texto plano. El token genera una mención real de Teams.</div>
+    </section>
+
+    <section id="post" class="section">
+      <div class="step-head"><div class="step-num">10</div><div><div class="kicker">Acción 6</div><h2>Post message in a chat or channel</h2></div></div>
+      <p>Agrega <strong>Microsoft Teams → Post message in a chat or channel</strong>.</p>
+      <table>
+        <tr><th>Campo</th><th>Configuración</th></tr>
+        <tr><td>Post as</td><td><strong>User</strong></td></tr>
+        <tr><td>Post in</td><td><strong>Chat de grupo</strong></td></tr>
+        <tr><td>Chat de grupo</td><td><strong>Enter custom value → Conversation ID</strong> de Create a chat</td></tr>
+      </table>
+      <div class="callout warning"><strong>No selecciones un chat histórico manualmente.</strong> El chat debe cambiar de forma dinámica en cada iteración usando el <strong>Conversation ID</strong> que devuelve <strong>Create a chat</strong>.</div>
+      <h3>Configurar el mensaje</h3>
+      <p>Escribe <code>Hola </code>, inserta el contenido dinámico generado por <strong>Get an @mention token for a user</strong> y luego continúa con el mensaje.</p>
+      <div class="codebox"><code>Hola [Mention Token] 👋
+
+Te escribo para recordarte que tienes pendiente completar...</code></div>
+      <div class="callout success"><strong>Resultado esperado:</strong> el destinatario verá un mensaje normal enviado por tu usuario corporativo y con una mención real.</div>
+    </section>
+
+    <section id="prueba" class="section">
+      <div class="step-head"><div class="step-num">11</div><div><div class="kicker">Validación</div><h2>Guardar y realizar una prueba</h2></div></div>
+      <ol>
+        <li>Haz clic en <strong>Save</strong>.</li>
+        <li>Prueba primero con uno o dos correos.</li>
+        <li>Ve a <strong>Test → Manually → Run flow</strong>.</li>
+        <li>Verifica que cada mensaje llegue al chat correcto.</li>
+        <li>Confirma que el remitente sea tu usuario y que la mención funcione.</li>
+      </ol>
+      <div class="callout warning"><strong>Nunca estrenes el flujo con toda la base.</strong><br><br>1 usuario → 2 usuarios → 5 usuarios → base completa.</div>
+    </section>
+
+    <section id="errores" class="section">
+      <div class="step-head"><div class="step-num">12</div><div><div class="kicker">Troubleshooting</div><h2>Errores que encontramos</h2></div></div>
+      <details open><summary>Error 1 · Table = No items</summary><p><strong>Causa:</strong> el Excel no tenía una Tabla real.<br><strong>Solución:</strong> convertir el rango con <code>Ctrl + T</code>.</p></details>
+      <details><summary>Error 2 · Power Automate no muestra la columna Correo</summary><p>Utiliza <code>fx</code> y pega:</p><div class="codebox"><button class="copy-btn" data-copy="items('Apply_to_each')?['Correo']">Copiar</button><code>items('Apply_to_each')?['Correo']</code></div></details>
+      <details><summary>Error 3 · No aparece Id</summary><p>Utiliza esta expresión:</p><div class="codebox"><button class="copy-btn" data-copy="outputs('Get_user_profile_(V2)')?['body/id']">Copiar</button><code>outputs('Get_user_profile_(V2)')?['body/id']</code></div></details>
+      <details><summary>Error 4 · “Chat de grupo” muestra chats existentes</summary><p>No selecciones ninguno manualmente. Usa <strong>Enter custom value</strong> y luego inserta <strong>Conversation ID</strong> de <strong>Create a chat</strong>.</p></details>
+      <details><summary>Error 5 · El run termina Failed aunque algunos mensajes llegaron</summary><p>Las causas más probables son filas vacías, correos mal escritos, usuarios cesados, cuentas desactivadas o usuarios que ya no existen en Microsoft 365.</p></details>
+      <details><summary>¿Qué pasa con usuarios inactivos?</summary><p>Puede fallar <strong>Get user profile (V2)</strong>, <strong>Create a chat</strong> o <strong>Get an @mention token</strong>. Los usuarios válidos pueden haber recibido correctamente su mensaje aunque la ejecución general quede como <strong>Failed</strong>. En esta versión se prioriza simplicidad y no se implementa Scope + Configure run after.</p></details>
+    </section>
+
+    <section class="section">
+      <div class="step-head"><div class="step-num">13</div><div><div class="kicker">Referencia</div><h2>Qué hace cada componente</h2></div></div>
+      <table>
+        <tr><th>Componente</th><th>Función</th></tr>
+        <tr><td>Manually trigger a flow</td><td>Inicia manualmente el proceso.</td></tr>
+        <tr><td>List rows present in a table</td><td>Lee la base de correos.</td></tr>
+        <tr><td>Apply to each</td><td>Recorre cada fila.</td></tr>
+        <tr><td>Get user profile (V2)</td><td>Busca al usuario en Microsoft 365.</td></tr>
+        <tr><td>Create a chat</td><td>Crea o identifica el chat.</td></tr>
+        <tr><td>Get an @mention token</td><td>Genera la mención personalizada.</td></tr>
+        <tr><td>Post message</td><td>Envía el mensaje desde Teams.</td></tr>
+      </table>
+    </section>
+
+    <section id="checklist" class="section">
+      <div class="step-head"><div class="step-num">✓</div><div><div class="kicker">Antes de ejecutar</div><h2>Checklist final</h2></div></div>
+      <div class="checklist-wrap">
+        <div><strong id="checkText">0% completado</strong></div>
+        <div class="check-progress"><span id="checkBar"></span></div>
+        <div id="checks">
+          <label class="check-item"><input type="checkbox">Recordatorio.xlsx está almacenado en mi OneDrive corporativo.</label>
+          <label class="check-item"><input type="checkbox">El archivo NO está únicamente en mi PC.</label>
+          <label class="check-item"><input type="checkbox">No es obligatorio compartir el Excel con otras personas.</label>
+          <label class="check-item"><input type="checkbox">La columna se llama exactamente Correo.</label>
+          <label class="check-item"><input type="checkbox">Los datos están convertidos en una Tabla de Excel.</label>
+          <label class="check-item"><input type="checkbox">La tabla tiene encabezados.</label>
+          <label class="check-item"><input type="checkbox">La tabla termina en la última fila con información.</label>
+          <label class="check-item"><input type="checkbox">No existen filas vacías dentro de la tabla.</label>
+          <label class="check-item"><input type="checkbox">List rows present in a table apunta al archivo correcto.</label>
+          <label class="check-item"><input type="checkbox">Location = OneDrive for Business.</label>
+          <label class="check-item"><input type="checkbox">Document Library = Documentos.</label>
+          <label class="check-item"><input type="checkbox">Apply to each = body/value.</label>
+          <label class="check-item"><input type="checkbox">Get user profile (V2) usa el correo de la fila actual.</label>
+          <label class="check-item"><input type="checkbox">Create a chat utiliza el ID del usuario.</label>
+          <label class="check-item"><input type="checkbox">Title está vacío.</label>
+          <label class="check-item"><input type="checkbox">Get an @mention token usa el correo actual.</label>
+          <label class="check-item"><input type="checkbox">Post as = User.</label>
+          <label class="check-item"><input type="checkbox">Post in = Chat de grupo.</label>
+          <label class="check-item"><input type="checkbox">El chat usa Conversation ID de Create a chat.</label>
+          <label class="check-item"><input type="checkbox">El mensaje utiliza el token de mención dinámico.</label>
+          <label class="check-item"><input type="checkbox">Hice una prueba previa con 1–2 usuarios.</label>
+          <label class="check-item"><input type="checkbox">Guardé el flujo antes de ejecutarlo.</label>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">Guía interna · Excel + OneDrive + Power Automate + Microsoft Teams</div>
+  </main>
+</div>
+
+<script>
+const progress=document.getElementById('topProgress');
+window.addEventListener('scroll',()=>{
+  const h=document.documentElement.scrollHeight-window.innerHeight;
+  progress.style.width=((window.scrollY/h)*100)+'%';
+});
+document.querySelectorAll('.copy-btn').forEach(btn=>{
+  btn.addEventListener('click',async()=>{
+    try{
+      await navigator.clipboard.writeText(btn.dataset.copy);
+      const old=btn.textContent; btn.textContent='Copiado'; btn.classList.add('copied');
+      setTimeout(()=>{btn.textContent=old;btn.classList.remove('copied')},1200);
+    }catch(e){ btn.textContent='Selecciona y copia'; }
+  });
+});
+const checks=[...document.querySelectorAll('#checks input')];
+const bar=document.getElementById('checkBar'), text=document.getElementById('checkText');
+function updateChecks(){
+  const done=checks.filter(x=>x.checked).length, pct=Math.round(done/checks.length*100);
+  bar.style.width=pct+'%'; text.textContent=pct+'% completado';
+  localStorage.setItem('pa-checks', JSON.stringify(checks.map(x=>x.checked)));
+}
+const saved=JSON.parse(localStorage.getItem('pa-checks')||'[]');
+checks.forEach((x,i)=>{if(saved[i])x.checked=true;x.addEventListener('change',updateChecks)});
+updateChecks();
+
+const sections=[...document.querySelectorAll('section[id]')];
+const links=[...document.querySelectorAll('#nav a')];
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));
+    }
+  })
+},{rootMargin:'-20% 0px -70% 0px'});
+sections.forEach(s=>observer.observe(s));
+</script>
+</body>
+</html>
